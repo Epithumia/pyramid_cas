@@ -11,15 +11,15 @@ class ViewTests(unittest.TestCase):
         testing.tearDown()
 
     def test_first_call_cas_login(self):
-        from pyramid_cas.views import caslogin
+        from pyramid_cas.views import cas_login
         request = testing.DummyRequest()
-        info = caslogin(request)
-        ticket = request.GET.get('ticket')
+        info = cas_login(request)
+        ticket = request.GET.get("ticket")
         self.assertEqual(ticket, None)
 
     def test_cas_logout(self):
-        from pyramid_cas.views import caslogout
+        from pyramid_cas.views import cas_logout
         request = testing.DummyRequest()
-        info = caslogout(request)
+        info = cas_logout(request)
         self.assertEqual(info.status, '302 Found')
 

@@ -1,12 +1,24 @@
-0.3 [7/21/14]
----------
+0.4 [2016/02/05]
+----------------
+    - deleted unused files and templates
+    - deleted unused .ini files (all info is in the README file)
+    - removed the pyramid_cas.callback.get_user functionality: the module should
+        not burden itself with this since Pyramid already offers several ways to
+        do it easily
+    - some documentation
+    - logging
+    - After a successful authentication, it's now possible to redirect back to a
+        page based on the request.GET "next" parameter
+
+0.3 [2014/07/21]
+----------------
 
 - Now Apache licensed
 - Login and logout routes are now named
 - Added redirect route after successful authentication
 
-0.2 [6/17/14]
----------
+0.2 [2014/06/17]
+----------------
 
 - Brought into compliance with PEP8
 - Clarified documentation

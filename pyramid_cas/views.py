@@ -1,58 +1,66 @@
-# python
-import sys
 import logging
+logger = logging.getLogger(__name__)
 
-# pyramid
 from pyramid.httpexceptions import HTTPFound, HTTPForbidden
 from pyramid.security import remember, forget, unauthenticated_userid
 from pyramid.view import view_config
 
-
-## pyramid_cs
-from pyramid_cas.services import CASProvider
-logger = logging.getLogger(__name__)
-
-cas = CASProvider()
+from .cas import CASProvider
 
 
-@view_config(name='cas-login', renderer='string')
-def caslogin(request, return_url=None):
+def _get_next_url(request, default):
     """
-    Cas login and user challenger view
+    Returns the next URL (the page to redirect to after a successful CAS auth.)
+    @param request:  Pyramid request object
+    @param default:  name of the configuration directive to inspect in order to
+                     get the route name to redirect to.
+                     Example: you have "pyramid_cas.route_on_login" in
+                     your .ini file, you would use default="route_on_login"
     """
-    service = cas.getserviceurl(request)
+    next_url = request.GET.get("next")
+    if next_url is None:
+        config = request.registry.settings
+        next_url = request.route_url(config["pyramid_cas.%s" % default])
+    return next_url
+
+
+@view_config(route_name="cas-login", renderer="string")
+def cas_login(request):
+    "CAS login and user challenger view"
     username = unauthenticated_userid(request)
-    if username is None:
-        ticket = request.GET.get('ticket')
-        if ticket is None:
-            return cas.sendtoservice(request)
-        username = cas.verifycas20(request, ticket, service)
-        if username is None:
-            return 'no user'
-
-        settings = request.registry.settings
-        if 'pyramid_cas.callback.get_user' in settings:
-            callable = settings['pyramid_cas.callback.get_user']
-            module = callable.split('.')[0] + '.' + callable.split('.')[1]
-            caller = sys.modules[module]
-            method = getattr(caller, callable.split('.')[2])
-            user = method(username, request)
-        else:
-            user = username
-        headers = remember(request, user, max_age='86400')
-
-        # fall back to setting from config file if return_url isn't provided
-        redirect_to = return_url or request.route_url(settings['pyramid_cas.redirect_route'])
-        return HTTPFound(location=redirect_to, headers=headers)
-    else:
+    # Already authenticated
+    if username is not None:
+        logger.info("Already authenticated: username=%s", username)
         raise HTTPForbidden
 
+    next_url = _get_next_url(request, "route_on_login")
+    cas = CASProvider(request, next_url)
 
-@view_config(name='cas-logout', renderer='string')
-def caslogout(request):
-    """
-    Cas logout page
-    """
+    ticket = request.GET.get("ticket", None)
+    if ticket is None:
+        logger.info("No ticket, redirecting to CAS login page")
+        return HTTPFound(location=cas.get_login_url())
+    else: # We have a ticket
+        logger.info("Verifying ticket")
+        username = cas.verify_cas_20(ticket)
+        if username is None:
+            msg = "Authentication failure: CAS returned no user"
+            logger.error(msg)
+            return msg
+
+        # We have a username
+        logger.info("Successful authentication for username: %s", username)
+        headers = remember(request, username, max_age="86400")
+        return HTTPFound(location=next_url, headers=headers)
+
+
+@view_config(route_name="cas-logout", renderer="string")
+def cas_logout(request):
+    "CAS logout page (clears the session and AND does a real CAS logout)"
     headers = forget(request)
     request.session.clear()
-    return HTTPFound(location=cas.getlogouturl(request), headers=headers)
+
+    next_url = _get_next_url(request, "route_on_logout")
+    cas = CASProvider(request, next_url)
+    logger.info("Session cleared, redirecting to CAS logout page")
+    return HTTPFound(location=cas.get_logout_url(), headers=headers)
