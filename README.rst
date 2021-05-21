@@ -110,5 +110,6 @@ Instructions
 TODO
 ====
     - Implement CAS 1.0 protocol
+    - get a dict of attributes instead of just the username
     - Add tests
     - Add demos
