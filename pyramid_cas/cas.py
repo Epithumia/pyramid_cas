@@ -1,4 +1,5 @@
 import logging
+
 logger = logging.getLogger(__name__)
 
 
@@ -6,6 +7,7 @@ from urllib.request import urlopen
 from urllib.parse import urlencode
 from urllib.parse import urljoin
 from xml.etree import ElementTree
+from xmltodict import parse as xmlparse
 
 
 class CASProvider(object):
@@ -29,15 +31,17 @@ class CASProvider(object):
             logger.debug("serviceValidate response: %s", response)
             tree = ElementTree.fromstring(response)
             if tree[0].tag.endswith("authenticationSuccess"):
-                return tree[0][0].text  # username
+                return tree[0][0].text, xmlparse(
+                    ElementTree.tostring(tree)
+                )  # (username, user data)
             else:
-                return None
+                return None, None
         finally:
             page.close()
 
     def _get_service_url(self):
         service = self.request.host_url + self.request.path
-        service += ("&" if "?" in service else "?")
+        service += "&" if "?" in service else "?"
         service += urlencode({"next": self.next_url})
         # service = http://my.app/login?next=http://my.app/somepage
         return service

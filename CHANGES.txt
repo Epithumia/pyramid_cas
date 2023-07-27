@@ -1,14 +1,19 @@
+0.4.1 [2023/07/27]
+----------------
+- Modified ticket verification to pull user information sent by CAS
+- Reformatted code with black
+
 0.4 [2016/02/05]
 ----------------
-    - deleted unused files and templates
-    - deleted unused .ini files (all info is in the README file)
-    - removed the pyramid_cas.callback.get_user functionality: the module should
-        not burden itself with this since Pyramid already offers several ways to
-        do it easily
-    - some documentation
-    - logging
-    - After a successful authentication, it's now possible to redirect back to a
-        page based on the request.GET "next" parameter
+- deleted unused files and templates
+- deleted unused .ini files (all info is in the README file)
+- removed the pyramid_cas.callback.get_user functionality: the module should
+    not burden itself with this since Pyramid already offers several ways to
+    do it easily
+- some documentation
+- logging
+- After a successful authentication, it's now possible to redirect back to a
+    page based on the request.GET "next" parameter
 
 0.3 [2014/07/21]
 ----------------

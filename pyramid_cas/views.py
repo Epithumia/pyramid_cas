@@ -42,7 +42,7 @@ def cas_login(request):
         return HTTPFound(location=cas.get_login_url())
     else: # We have a ticket
         logger.info("Verifying ticket")
-        username = cas.verify_cas_20(ticket)
+        username, userdata = cas.verify_cas_20(ticket)
         if username is None:
             msg = "Authentication failure: CAS returned no user"
             logger.error(msg)
@@ -51,6 +51,7 @@ def cas_login(request):
         # We have a username
         logger.info("Successful authentication for username: %s", username)
         headers = remember(request, username, max_age="86400")
+        request.session['userdata'] = userdata  # Store the user's data in the session
         return HTTPFound(location=next_url, headers=headers)
 
 

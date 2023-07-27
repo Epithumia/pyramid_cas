@@ -12,6 +12,7 @@ class ViewTests(unittest.TestCase):
 
     def test_first_call_cas_login(self):
         from pyramid_cas.views import cas_login
+
         request = testing.DummyRequest()
         info = cas_login(request)
         ticket = request.GET.get("ticket")
@@ -19,7 +20,7 @@ class ViewTests(unittest.TestCase):
 
     def test_cas_logout(self):
         from pyramid_cas.views import cas_logout
+
         request = testing.DummyRequest()
         info = cas_logout(request)
-        self.assertEqual(info.status, '302 Found')
-
+        self.assertEqual(info.status, "302 Found")
